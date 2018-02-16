@@ -1,2 +1,1 @@
-# windows-malware-detection
-Windows Malware detection Kaggle Challenge - Paper Implementation for the same topic
+# Hybrid Malicious Code Detection using Deep Learning

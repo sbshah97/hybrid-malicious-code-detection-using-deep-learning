@@ -99,3 +99,6 @@ ENV/
 
 # mypy
 .mypy_cache/
+
+# Dataset file
+kddcup.data_10_percent_corrected
