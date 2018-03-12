@@ -102,3 +102,5 @@ ENV/
 
 # Dataset file
 kddcup.data_10_percent_corrected
+
+out.csv
