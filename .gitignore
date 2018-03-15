@@ -104,3 +104,7 @@ ENV/
 kddcup.data_10_percent_corrected
 
 out.csv
+
+data/
+
+reference-paper/
