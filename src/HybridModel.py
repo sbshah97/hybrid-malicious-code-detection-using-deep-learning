@@ -15,11 +15,18 @@ from keras import backend as K
 # Tensorboard to visualise the output
 from keras.callbacks import TensorBoard
 
+# Import for Deep Belief Network
+from dbn.tensorflow import SupervisedDBNClassification
+
+# Import SKLearn Metrics to be used
+from sklearn.metrics import classification_report
+from sklearn.metrics.classification import accuracy_score
+
 '''
 Step 1: Pre Process the required data in the normal format
 '''
 # Read the data from the csv file
-df = read_csv("kddcup.data", index_col=None)
+df = read_csv("../data/kddcup.data", index_col=None)
 
 # Convert the strings to numeric values
 df1 = df.replace({'protocol_type': {'tcp':1, 'udp':2, 'icmp':3}})
@@ -54,7 +61,6 @@ X_train, X_test, Y_train, Y_test = train_test_split(sX, Y, train_size = 0.7, ran
 '''
 Step 2: Building the Autoencoder
 '''
-
 # Get the input dimension of the auto encoder
 input_dim = Input(shape = (ncol, ))
 
@@ -76,37 +82,45 @@ decoded2 = Dense(150, activation = 'relu')(decoded1)
 decoded3 = Dense(300, activation = 'relu')(decoded2)
 decoded4 = Dense(ncol, activation = 'sigmoid')(decoded3)
 
+# If file does not exist
 # Combination of encoder and decoder allows us to give the autoencoder
 autoencoder = Model(input = input_dim, output = decoded4)
 
 # Simple command to compile and run the autoencoder
 autoencoder.compile(optimizer = 'adadelta', loss = 'binary_crossentropy')
-autoencoder.fit(X_train, X_train, epochs=5, batch_size=100, shuffle=True, validation_data=(X_test, X_test), callbacks=[TensorBoard(log_dir='/tmp/ias-project')])
+autoencoder.fit(X_train, X_train, epochs=25, batch_size=100, shuffle=True, validation_data=(X_test, X_test), callbacks=[TensorBoard(log_dir='/tmp/ias-project')])
 
 # Get the encoded input with the reduced dimensionality
 encoder = Model(input=input_dim, output=encoded4)
 encoded_input = Input(shape=(encoding_dim, ))
-encoded_out = encoder.predict(X_test)
-print(encoded_out[0:2])
+encoded_out = encoder.predict(X)
 
-np.savetxt('out.csv', encoded_out, delimiter=',')
+# print('Accuracy for Autoencoder: %f' % accuracy_score(Y_test, encoded_out))
 
-from sklearn.svm import SVC, LinearSVC, NuSVR
-from sklearn.pipeline import Pipeline
-from sklearn.metrics import classification_report
-from dbn.tensorflow import UnsupervisedDBN, SupervisedDBNClassification
+'''
+Step 3: Save the output of the autoencoder to a file
+'''
+np.savetxt('encoded_output.csv', encoded_out, delimiter=',')
 
-# svm = SVC()
-classifier = SupervisedDBNClassification(hidden_layers_structure=[32, 16],
+
+'''
+Step 4: Deep Belief Network
+'''
+classifier = SupervisedDBNClassification(hidden_layers_structure=[20, 10],
                       batch_size=10,
                       learning_rate_rbm=0.06,
-                      n_epochs_rbm=2,
+                      n_epochs_rbm=5,
                       activation_function='sigmoid')
 
-# classifier = Pipeline(steps=[('dbn', dbn), ('svm', svm)])
-
-X_train, X_test, Y_train, Y_test = train_test_split(encoded_out, Y_test, train_size = 0.7, random_state = seed(2017))
+X_train, X_test, Y_train, Y_test = train_test_split(encoded_out, Y, train_size = 0.7, random_state = seed(2017))
 
 classifier.fit(X_train, Y_train)
 
+Y_pred = classifier.predict(X_test)
+print('Accuracy for Deep Belief Network: %f' % accuracy_score(Y_test, Y_pred))
 print(classification_report(Y_test, classifier.predict(X_test)))
+
+'''
+Step 5: Save the output of the Deep Belief Network to a file
+'''
+np.savetxt('dbn_output.csv', Y_pred, delimiter=',')
