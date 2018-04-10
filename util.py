@@ -4,7 +4,7 @@ from imports import *
 Step 1: Pre Process the required data in the normal format
 '''
 # Read the data from the csv file
-df = read_csv("kddcup.data", index_col=None)
+df = read_csv("data/kddcup.data", index_col=None)
 
 # Convert the strings to numeric values
 df1 = df.replace({'protocol_type': {'tcp': 1, 'udp': 2, 'icmp': 3}})

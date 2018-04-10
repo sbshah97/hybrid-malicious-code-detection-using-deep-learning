@@ -36,7 +36,7 @@ conda install numpy pandas sklearn
 
 ## Training
 
-The basic usage is `python train.py`.
+The basic usage is `python driver.py`.
 
 ## Contributors
 * The Project is created and maintained by [Salman Shah](https://github.com/salman-bhai).
