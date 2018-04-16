@@ -103,8 +103,6 @@ ENV/
 # Dataset file
 kddcup.data_10_percent_corrected
 
+# Unnecessary large data files
 out.csv
-
 data/
-
-reference-paper/
