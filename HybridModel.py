@@ -1,11 +1,10 @@
 from imports import *
 
 class Autoencoder:
-    def __init__(self, encoding_dim, ncol, X_train, X_test):
+    def __init__(self, encoding_dim, ncol, X):
         self.input_dim = Input(shape=(ncol, ))
         self.encoding_dim = encoding_dim
-        self.X_train = X_train
-        self.X_test = X_test
+        self.X = X
         self.ncol = ncol
 
     def train(self):
@@ -24,6 +23,9 @@ class Autoencoder:
         # Combination of encoder and decoder allows us to give the autoencoder
         self.autoencoder = Model(input=self.input_dim, output=self.decoded4)
 
+        self.X_train, self.X_test, self.Y_train, self.Y_test = train_test_split(
+            self.X, self.X, train_size=0.7, random_state=seed(2017))
+
         # Simple command to compile and run the autoencoder
         self.autoencoder.compile(optimizer='adadelta', loss='binary_crossentropy')
         self.autoencoder.fit(self.X_train, self.X_train, epochs=5, batch_size=100, shuffle=True, validation_data=(
@@ -32,7 +34,7 @@ class Autoencoder:
         # Get the encoded input with the reduced dimensionality
         self.encoder = Model(input=self.input_dim, output=self.encoded4)
         self.encoded_input = Input(shape=(self.encoding_dim, ))
-        encoded_out = self.encoder.predict(self.X_test)
+        encoded_out = self.encoder.predict(self.X)
   
         np.savetxt('out.csv', encoded_out, delimiter=',')
 
@@ -55,10 +57,11 @@ class DBN:
         X_train, X_test, Y_train, Y_test = train_test_split(
             self.X, self.Y, train_size=0.7, random_state=seed(2017))
 
-        print(X_train[:2], Y_train[:2])
+        print(X_train[:2])
+        print(Y_train[:2])
 
-        self.classifier.fit(X_train[0], Y_train)
+        self.classifier.fit(X_train, Y_train)
 
-        Y_pred = self.classifier.predict(X_test)
-        print('Accuracy for Deep Belief Network: %f' % accuracy_score(Y_test, Y_pred))
-        print(classification_report(Y_test, self.classifier.predict(X_test)))
+        Y_pred = self.classifier.predict(self.X)
+        print('Accuracy for Deep Belief Network: %f' % accuracy_score(self.Y, Y_pred))
+        # print(classification_report(Y, Y_pred)

@@ -2,7 +2,7 @@
 from pandas import read_csv, DataFrame
 from numpy.random import seed
 import numpy as np
-
+from numpy import array
 # SciKit Learn Libraries for util purposes
 from sklearn.preprocessing import minmax_scale
 from sklearn.model_selection import train_test_split
@@ -16,7 +16,7 @@ from keras import backend as K
 from keras.callbacks import TensorBoard
 
 # Import for Deep Belief Network
-from dbn.tensorflow import SupervisedDBNClassification
+from dbn import SupervisedDBNClassification
 
 # Import SKLearn Metrics to be used
 from sklearn.metrics import classification_report
@@ -51,8 +51,13 @@ df = df3.replace({'result': {'normal.':1, 'buffer_overflow.':2, 'loadmodule.':3,
 
 # Obtain value of X and Y
 X = df.iloc[:, 1:-1]
-Y = df.result
+Y = df.result.values
 
+Y = Y.astype(np.float32)
+# Y = Y.reshape(Y.shape[0], 1)
+
+
+print(Y[:2])
 # Scale value of x between 0 and 1 for each feature
 sX = minmax_scale(X, axis = 0)
 ncol = sX.shape[1]
@@ -88,12 +93,12 @@ autoencoder = Model(input = input_dim, output = decoded4)
 
 # Simple command to compile and run the autoencoder
 autoencoder.compile(optimizer = 'adadelta', loss = 'binary_crossentropy')
-autoencoder.fit(X_train, X_train, epochs=25, batch_size=100, shuffle=True, validation_data=(X_test, X_test), callbacks=[TensorBoard(log_dir='/tmp/ias-project')])
+autoencoder.fit(X_train, X_train, epochs=2, batch_size=100, shuffle=True, validation_data=(X_test, X_test), callbacks=[TensorBoard(log_dir='/tmp/ias-project')])
 
 # Get the encoded input with the reduced dimensionality
 encoder = Model(input=input_dim, output=encoded4)
 encoded_input = Input(shape=(encoding_dim, ))
-encoded_out = encoder.predict(X)
+encoded_out = encoder.predict(sX)
 
 # print('Accuracy for Autoencoder: %f' % accuracy_score(Y_test, encoded_out))
 
@@ -102,17 +107,56 @@ Step 3: Save the output of the autoencoder to a file
 '''
 np.savetxt('encoded_output.csv', encoded_out, delimiter=',')
 
+# import csv
+
+# def readcsv(filename):
+#     ifile = open(filename, "rU")
+#     reader = csv.reader(ifile, delimiter=";")
+
+#     rownum = 0
+#     a = []
+
+#     for row in reader:
+#         a.append(row)
+#         rownum += 1
+
+#     ifile.close()
+#     return a
+
+# encoded_out = readcsv('encoded_output.csv')
 
 '''
 Step 4: Deep Belief Network
 '''
 classifier = SupervisedDBNClassification(hidden_layers_structure=[20, 10],
-                      batch_size=10,
-                      learning_rate_rbm=0.06,
-                      n_epochs_rbm=5,
-                      activation_function='sigmoid')
+                                         learning_rate_rbm=0.05,
+                                         learning_rate=0.1,
+                                         n_epochs_rbm=10,
+                                         n_iter_backprop=100,
+                                         batch_size=32,
+                                         activation_function='relu',
+                                         dropout_p=0.2)
+
+# from dbn.models import UnsupervisedDBN
+
+# classifier = SupervisedDBN(hidden_layers_structure=[32, 16, 32, 64],
+#                         batch_size=10,
+#                         learning_rate_rbm=0.06,
+#                         n_epochs_rbm=2,
+#                         activation_function='sigmoid')
+
 
 X_train, X_test, Y_train, Y_test = train_test_split(encoded_out, Y, train_size = 0.7, random_state = seed(2017))
+
+Y_train.astype(np.float32)
+
+x1 = []
+print(x1)
+
+print(X_train)
+print(Y_train)
+print(X_train.dtype)
+print(Y_train.dtype)
 
 classifier.fit(X_train, Y_train)
 
@@ -123,4 +167,4 @@ print(classification_report(Y_test, classifier.predict(X_test)))
 '''
 Step 5: Save the output of the Deep Belief Network to a file
 '''
-np.savetxt('dbn_output.csv', Y_pred, delimiter=',')
+# np.savetxt('dbn_output.csv', Y_pred, delimiter=',')

@@ -16,7 +16,7 @@ from keras import backend as K
 from keras.callbacks import TensorBoard
 
 # Import for Deep Belief Network
-from dbn.tensorflow import SupervisedDBNClassification
+from dbn import SupervisedDBNClassification
 
 # Import SKLearn Metrics to be used
 from sklearn.metrics import classification_report

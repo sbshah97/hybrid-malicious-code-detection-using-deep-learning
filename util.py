@@ -34,7 +34,5 @@ def pre_process(file_path):
     # Scale value of x between 0 and 1 for each feature
     sX = minmax_scale(X, axis=0)
     ncol = sX.shape[1]
-    X_train, X_test, Y_train, Y_test = train_test_split(
-        sX, Y, train_size=0.7, random_state=seed(2017))
 
-    return X_train, X_test, Y_train, Y_test, ncol
+    return sX, Y, ncol
